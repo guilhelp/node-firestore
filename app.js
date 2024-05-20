@@ -3,9 +3,9 @@ const app = express()
 const handlebars = require("express-handlebars").engine
 const bodyParser = require("body-parser")
 const { initializeApp, applicationDefault, cert } = require('firebase-admin/app')
-const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore')
+const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore')
 
-const serviceAccount = require('./node-firestore-fd02c-firebase-adminsdk-dtytb-5466a361c9.json')
+const serviceAccount = require('./node-firestore-fd02c-firebase-adminsdk-dtytb-451e8101d3.json')
 
 initializeApp({
   credential: cert(serviceAccount)
@@ -23,8 +23,19 @@ app.get("/", function(req, res){
     res.render("primeira_pagina")
 })
 
-app.get("/consulta", function(req, res){
+app.get("/consulta", async function(req, res) {
+    const agendamentosRef = db.collection('agendamentos');
+    const snapshot = await agendamentosRef.get();
+    const agendamentos = [];
+
+    snapshot.forEach(doc => {
+        agendamentos.push({ id: doc.id, ...doc.data() });
+    });
+
+    console.log(agendamentos)
+    res.render("consultar", { agendamentos: agendamentos });
 });
+
 
 app.get("/editar/:id", function(req, res){
 })
@@ -41,7 +52,7 @@ app.post("/cadastrar", function(req, res){
         observacao: req.body.observacao
     }).then(function(){
         console.log('Added document');
-        res.redirect('/')
+        res.redirect('/consulta')
     })
 })
 
